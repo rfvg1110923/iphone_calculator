@@ -36,81 +36,147 @@ class homePage extends StatefulWidget {
 
 class _homePageState extends State<homePage> {
 
-  String result = "0";
-  String finalResult = "0";
+  String text = "0";
+  String result = "";
+  String finalResult = "";
   double num1 = 0;
   double num2 = 0;
   double num3 = 0;
   String operand = "";
+  String pre_operand = "";
 
   buttonPressed(String btntxt){     //按鈕觸發事件，不包含0
     if(btntxt == "AC"){
-      result = "0";
+      text = "0";
+      result = "";
       finalResult = "0";
       num1 = 0;
       num2 = 0;
       num3 = 0;
       operand = "";
+      pre_operand = "";
     }
-    else if(btntxt == "+" || btntxt == "-" || btntxt == "x" || btntxt == "/"){
-      num1 = double.parse(result);
-      operand = btntxt;
-      finalResult = "0";
-    }
-    else if(btntxt == "."){
-      if(!result.contains(".")){
-        finalResult = result + btntxt;
+
+    else if(btntxt == "=" && operand == "="){
+
+      if(num1 == 0){
+        num1 = double.parse(result);
+      }else{
+        num2 = double.parse(result);
       }
-    }
-    else if(btntxt == "+/-"){
-      if(double.parse(result) < 0){
-        finalResult = finalResult.replaceAll("-", "");
-      }else if(double.parse(result) > 0){
-        finalResult = "-$finalResult";
+
+      if(pre_operand == "+"){
+        result = (num1 + num2).toString();
+        num1 = double.parse(result);
+        finalResult = result;
       }
+      else if(pre_operand == "-"){
+        result = (num1 - num2).toString();
+        num1 = double.parse(result);
+        finalResult = result;
+      }
+      else if(pre_operand == "x"){
+        result = (num1 * num2).toString();
+        num1 = double.parse(result);
+        finalResult = result;
+      }
+      else if(pre_operand == "/"){
+        if(num2 == 0){
+          finalResult = "ERROR";
+        }
+        else {
+          result = (num1 / num2).toString();
+          num1 = double.parse(result);
+          finalResult = result;
+        }
+      }
+
     }
-    else if(btntxt == "="){
-      num2 = double.parse(result);
+    else if(btntxt == "+" || btntxt == "-" || btntxt == "x" || btntxt == "/" || btntxt == "="){
+
+      if(num1 == 0){
+        num1 = double.parse(result);
+      }else{
+        num2 = double.parse(result);
+      }
+
       if(operand == "+"){
-        finalResult = (num1 + num2).toString();
+        result = (num1 + num2).toString();
+        num1 = double.parse(result);
+        finalResult = result;
       }
       else if(operand == "-"){
-        finalResult = (num1 - num2).toString();
+        result = (num1 - num2).toString();
+        num1 = double.parse(result);
+        finalResult = result;
       }
       else if(operand == "x"){
-        finalResult = (num1 * num2).toString();
-        if (finalResult.split(".")[1].length > 8){      //取小數點後8位數
-          finalResult = finalResult.split(".")[0] + "." +  finalResult.split(".")[1].substring(1,9);
-        }
+        result = (num1 * num2).toString();
+        num1 = double.parse(result);
+        finalResult = result;
       }
       else if(operand == "/"){
         if(num2 == 0){
           finalResult = "ERROR";
         }
         else {
-          finalResult = (num1 / num2).toString();
-          if (finalResult.split(".")[1].length > 8){      //取小數點後8位數
-            finalResult = finalResult.split(".")[0] + "." +  finalResult.split(".")[1].substring(1,9);
-          }
+          result = (num1 / num2).toString();
+          num1 = double.parse(result);
+          finalResult = result;
         }
       }
-      num1 = 0;
-      num2 = 0;
-      operand ="";
+
+      pre_operand = operand;
+      operand = btntxt;
+      result = "";
+
     }
+    else if(btntxt == "."){
+      if(!result.contains(".")){
+        result = result + btntxt;
+      }
+      finalResult = result;
+    }
+    else if(btntxt == "+/-"){
+      if(result == ""){
+        result = "-" + result;
+      }
+      else{
+        if(result.contains("-")){
+          result = result.replaceAll("-", "");
+          finalResult = result;
+        }
+        else{
+          result = "-" + result;
+          finalResult = result;
+        }
+      }
+    }
+
     else if(btntxt == "%"){
       num3 = double.parse(result);
-      finalResult = (num3 / 100).toString();
+      result = (num3 / 100).toString();
+      finalResult = result;
     }
     else{
-      finalResult += btntxt;
+      result = result + btntxt;
+      finalResult = result;
+    }
+
+    if (finalResult.contains(".")) {
+      if (finalResult.split(".")[1].length > 8){      //取小數點後8位數
+        finalResult = finalResult.split(".")[0] + "." +  finalResult.split(".")[1].substring(1,9);
+      }
+      if(finalResult.split(".")[1] == "00000000" || finalResult.split(".")[1] == "0"){
+        finalResult = finalResult.split(".")[0];
+      }
     }
     if(finalResult.length > 1 && finalResult.startsWith("0") && !(finalResult.contains("."))){      //移除開頭的0
       finalResult = finalResult.substring(1, finalResult.length);
     }
 
     setState(() {     //畫面更新
-      result = finalResult;
+      text = finalResult;
     });
   }
 
@@ -145,7 +211,7 @@ class _homePageState extends State<homePage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Padding(padding: EdgeInsets.all(10.0),
-                    child: Text(result,
+                    child: Text(text,
                       textAlign: TextAlign.left,
                       style: TextStyle(color: Colors.white,
                           fontSize: 50),
@@ -201,12 +267,13 @@ class _homePageState extends State<homePage> {
                     padding: EdgeInsets.fromLTRB(34, 20, 145, 20),
                     onPressed: (){      //按鈕0觸發事件
                       if (result.length == 1 && result == "0")
-                        finalResult = "0";
+                        result = "0";
                       else {
-                        finalResult += "0";
+                        result += "0";
                       }
+                      finalResult = result;
                       setState(() {
-                        result = finalResult;
+                        text = finalResult;
                       });
                     },
                     shape: StadiumBorder(),
